@@ -14,6 +14,7 @@ const update = debounce((e) => {
 
 const notes = ref([]);
 const errorMessage = ref("");
+const draggedIndex = ref(null);
 
 function getRandomColor() {
   return "hsl(" + Math.random() * 360 + ", 100%, 75%)";
@@ -34,7 +35,7 @@ const addNote = () => {
   showNoteModal.value = false;
   newNote.value = "";
   errorMessage.value = "";
-
+  isFullscreen.value = false;
 }
 
 const saveNote = () => {
@@ -49,6 +50,7 @@ const saveNote = () => {
   newNote.value = "";
   errorMessage.value = "";
   reEdit.value = false;
+  isFullscreen.value = false;
 }
 
 const deleteNote = (noteID) => {
@@ -69,6 +71,14 @@ const toggleFullscreen = () => {
   isFullscreen.value = !isFullscreen.value;
 }
 
+const dragStart = (index) => {
+  draggedIndex.value = index;
+}
+
+const drop = (index) => {
+  const draggedNote = notes.value.splice(draggedIndex.value, 1)[0];
+  notes.value.splice(index, 0, draggedNote);
+}
 </script>
 
 <template>
@@ -96,12 +106,16 @@ const toggleFullscreen = () => {
       </header>
       <div class="cards-container">
         <div 
-          v-for="note in notes" 
+          v-for="(note, index) in notes" 
           class="card" 
           :key="note.id"
           :style="{ 
             backgroundColor: note.backgroundColor 
           }"
+          draggable="true"
+          @dragstart="dragStart(index)"
+          @dragover.prevent
+          @drop="drop(index)"
         >
           <div class="edit">
             <!-- edit the note -->
@@ -164,6 +178,11 @@ header button {
   justify-content: space-between;
   margin-right: 20px;
   margin-bottom: 20px;
+  cursor: grab;
+}
+
+.card:active {
+  cursor: grabbing;
 }
 
 .card .edit {
@@ -284,7 +303,4 @@ header button {
   padding: 20px;
 }
 
-code {
-  color: #f66;
-}
 </style>
